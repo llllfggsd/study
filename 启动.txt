@@ -1,0 +1,8 @@
+后端启动
+cd backend
+go run main.go
+
+
+前端启动
+cd frontend
+npm run dev

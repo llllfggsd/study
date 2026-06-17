@@ -1,0 +1,11 @@
+frontend/dist
+node_modules
+.env
+.DS_Store
+*.log
+*.env
+*.cache
+.idea
+.vscode
+coverage
+*.bak
