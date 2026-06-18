@@ -7,6 +7,7 @@ function CategoryDetail() {
   const navigate = useNavigate()
   const [category, setCategory] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     const fetchCategory = async () => {
@@ -22,6 +23,13 @@ function CategoryDetail() {
     fetchCategory()
   }, [id])
 
+  const copyCode = () => {
+    navigator.clipboard.writeText(category.share_code).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
   if (loading) return <div className="loading">加载中...</div>
   if (!category) return <div className="empty-state">分类不存在</div>
 
@@ -29,9 +37,21 @@ function CategoryDetail() {
     <div>
       <div className="detail-header">
         <button className="back-btn" onClick={() => navigate('/')}>← 返回</button>
-        <h2 className="page-title" style={{ margin: 0 }}>{category.name} 题库</h2>
+        <h2 className="page-title" style={{ margin: 0 }}>{category.name}</h2>
         <div />
       </div>
+
+      {!category.is_owner && (
+        <p style={{ fontSize: 13, color: '#999', marginBottom: 12 }}>创建者: {category.owner_name}</p>
+      )}
+
+      {category.is_owner && category.share_code && (
+        <div className="share-code-box" onClick={copyCode}>
+          <span className="share-label">分享码</span>
+          <span className="share-value">{category.share_code}</span>
+          <span className="share-copy">{copied ? '已复制' : '点击复制'}</span>
+        </div>
+      )}
 
       <div className="detail-stats">
         <div className="stat-box">
@@ -49,11 +69,19 @@ function CategoryDetail() {
       </div>
 
       <div className="action-grid">
-        <Link to={`/categories/${id}/import`} className="action-card">导入题目</Link>
+        {category.is_owner && (
+          <Link to={`/categories/${id}/import`} className="action-card">导入题目</Link>
+        )}
         <Link to={`/categories/${id}/practice?mode=order`} className="action-card">顺序练习</Link>
         <Link to={`/categories/${id}/practice?mode=random`} className="action-card">随机练习</Link>
         <Link to={`/categories/${id}/wrong`} className="action-card">错题集</Link>
-        <Link to={`/categories/${id}/questions`} className="action-card">题目管理</Link>
+        {category.is_owner && (
+          <Link to={`/categories/${id}/questions`} className="action-card">题目管理</Link>
+        )}
+        <Link to={`/categories/${id}/ranking`} className="action-card">排名</Link>
+        {category.is_owner && (
+          <Link to={`/categories/${id}/members`} className="action-card">成员管理</Link>
+        )}
       </div>
     </div>
   )

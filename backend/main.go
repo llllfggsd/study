@@ -13,6 +13,7 @@ func main() {
 	database.Init()
 
 	r := gin.Default()
+	r.MaxMultipartMemory = 100 << 20
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173", "http://localhost:3000"},
@@ -31,14 +32,23 @@ func main() {
 
 		auth.GET("/categories", handlers.GetCategories)
 		auth.POST("/categories", handlers.CreateCategory)
+		auth.POST("/categories/join", handlers.JoinCategory)
 		auth.GET("/categories/:id", handlers.GetCategory)
 		auth.DELETE("/categories/:id", handlers.DeleteCategory)
+		auth.POST("/categories/:id/leave", handlers.LeaveCategory)
+		auth.GET("/categories/:id/ranking", handlers.GetRanking)
+		auth.GET("/categories/:id/members", handlers.GetMembers)
+		auth.DELETE("/categories/:id/members/:uid", handlers.RemoveMember)
 
 		auth.POST("/categories/:id/import", handlers.ImportQuestions)
 		auth.GET("/categories/:id/questions", handlers.GetQuestions)
 		auth.DELETE("/questions/:id", handlers.DeleteQuestion)
 
-		auth.GET("/categories/:id/practice", handlers.GetPractice)
+		auth.GET("/categories/:id/practice/status", handlers.CheckPracticeStatus)
+		auth.POST("/categories/:id/practice/start", handlers.StartPractice)
+		auth.PUT("/categories/:id/practice/progress", handlers.UpdatePracticeProgress)
+		auth.DELETE("/categories/:id/practice/progress", handlers.DeletePracticeProgress)
+		auth.POST("/categories/:id/practice/complete", handlers.CompletePractice)
 		auth.POST("/questions/:id/answer", handlers.SubmitAnswer)
 
 		auth.GET("/categories/:id/wrong-questions", handlers.GetWrongQuestions)

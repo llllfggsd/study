@@ -616,6 +616,196 @@ body {
   text-decoration: underline;
 }
 
+.share-code-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #e8f0fe;
+  border: 1px solid #c5d7f2;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.share-code-box:hover {
+  background: #d4e4fc;
+}
+
+.share-label {
+  font-size: 13px;
+  color: #555;
+}
+
+.share-value {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: #1a73e8;
+  font-family: monospace;
+}
+
+.share-copy {
+  font-size: 12px;
+  color: #888;
+  margin-left: auto;
+}
+
+.ranking-table {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.ranking-header {
+  display: flex;
+  padding: 12px 20px;
+  background: #f5f7fa;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+}
+
+.ranking-row {
+  display: flex;
+  padding: 14px 20px;
+  border-top: 1px solid #f0f0f0;
+  font-size: 14px;
+  align-items: center;
+  transition: background 0.2s;
+}
+
+.ranking-row:hover {
+  background: #fafafa;
+}
+
+.ranking-row.ranking-self {
+  background: #e8f0fe;
+}
+
+.ranking-row.ranking-top .rank-col {
+  font-weight: 700;
+  color: #1a73e8;
+}
+
+.rank-col {
+  width: 60px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.name-col {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.score-col {
+  width: 80px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.score-value {
+  font-weight: 700;
+  color: #1a73e8;
+}
+
+.num-col {
+  width: 56px;
+  text-align: center;
+  flex-shrink: 0;
+  font-size: 13px;
+}
+
+.time-col {
+  width: 130px;
+  text-align: center;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #888;
+}
+
+.act-col {
+  width: 56px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.ranking-table-wrap {
+  overflow-x: auto;
+}
+
+.ranking-table {
+  min-width: 600px;
+}
+
+.result-page {
+  text-align: center;
+  padding: 40px 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.result-score-circle {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 24px auto;
+  border: 6px solid;
+  background: #fff;
+}
+
+.result-score-number {
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.result-score-label {
+  font-size: 14px;
+  color: #888;
+  margin-top: 4px;
+}
+
+.result-evaluation {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 16px 0 24px;
+}
+
+.result-stats {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-bottom: 32px;
+}
+
+.result-stat-item {
+  text-align: center;
+}
+
+.result-stat-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+.result-stat-label {
+  font-size: 12px;
+  color: #888;
+  margin-top: 4px;
+}
+
 @media (hover: none) {
   .category-card:hover,
   .action-card:hover,
@@ -772,6 +962,52 @@ body {
   .btn {
     padding: 10px 16px;
     font-size: 14px;
+  }
+
+  .share-code-box {
+    padding: 10px 12px;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .share-value {
+    font-size: 18px;
+    letter-spacing: 3px;
+  }
+
+  .ranking-header,
+  .ranking-row {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .rank-col {
+    width: 40px;
+  }
+
+  .score-col {
+    width: 60px;
+  }
+
+  .result-page {
+    padding: 24px 16px;
+  }
+
+  .result-score-circle {
+    width: 120px;
+    height: 120px;
+  }
+
+  .result-score-number {
+    font-size: 36px;
+  }
+
+  .result-stats {
+    gap: 24px;
+  }
+
+  .result-stat-value {
+    font-size: 16px;
   }
 }
 

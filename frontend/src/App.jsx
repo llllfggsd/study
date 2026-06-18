@@ -8,6 +8,8 @@ import Practice from './pages/Practice'
 import WrongQuestions from './pages/WrongQuestions'
 import QuestionManage from './pages/QuestionManage'
 import ImportPage from './pages/Import'
+import Ranking from './pages/Ranking'
+import Members from './pages/Members'
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token')
@@ -28,6 +30,8 @@ function App() {
           <Route path="/categories/:id/practice" element={<PrivateRoute><Practice /></PrivateRoute>} />
           <Route path="/categories/:id/wrong" element={<PrivateRoute><WrongQuestions /></PrivateRoute>} />
           <Route path="/categories/:id/questions" element={<PrivateRoute><QuestionManage /></PrivateRoute>} />
+          <Route path="/categories/:id/ranking" element={<PrivateRoute><Ranking /></PrivateRoute>} />
+          <Route path="/categories/:id/members" element={<PrivateRoute><Members /></PrivateRoute>} />
         </Routes>
       </main>
     </div>
