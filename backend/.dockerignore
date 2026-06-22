@@ -1,0 +1,5 @@
+data
+*.exe
+*.log
+Dockerfile
+.dockerignore

@@ -5,6 +5,7 @@ import Register from './pages/Register'
 import Home from './pages/Home'
 import CategoryDetail from './pages/CategoryDetail'
 import Practice from './pages/Practice'
+import Exam from './pages/Exam'
 import WrongQuestions from './pages/WrongQuestions'
 import QuestionManage from './pages/QuestionManage'
 import ImportPage from './pages/Import'
@@ -28,6 +29,7 @@ function App() {
           <Route path="/categories/:id" element={<PrivateRoute><CategoryDetail /></PrivateRoute>} />
           <Route path="/categories/:id/import" element={<PrivateRoute><ImportPage /></PrivateRoute>} />
           <Route path="/categories/:id/practice" element={<PrivateRoute><Practice /></PrivateRoute>} />
+          <Route path="/categories/:id/exam" element={<PrivateRoute><Exam /></PrivateRoute>} />
           <Route path="/categories/:id/wrong" element={<PrivateRoute><WrongQuestions /></PrivateRoute>} />
           <Route path="/categories/:id/questions" element={<PrivateRoute><QuestionManage /></PrivateRoute>} />
           <Route path="/categories/:id/ranking" element={<PrivateRoute><Ranking /></PrivateRoute>} />

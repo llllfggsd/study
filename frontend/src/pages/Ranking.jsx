@@ -43,7 +43,7 @@ function Ranking() {
       </div>
 
       <p style={{ color: '#666', marginBottom: 20 }}>
-        满分 100 分，共 {totalQuestions} 题，每题 {totalQuestions > 0 ? (100 / totalQuestions).toFixed(2) : 0} 分
+        按考试成绩排名 · 满分 100 分，共 {totalQuestions} 题
       </p>
 
       {ranking.length === 0 ? (
@@ -58,7 +58,7 @@ function Ranking() {
               <span className="num-col">最高</span>
               <span className="num-col">最低</span>
               <span className="num-col">平均</span>
-              <span className="time-col">最近答题</span>
+              <span className="time-col">最近考试</span>
             </div>
             {ranking.map((item, i) => (
               <div

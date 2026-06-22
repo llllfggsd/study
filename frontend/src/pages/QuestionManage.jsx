@@ -52,7 +52,7 @@ function QuestionManage() {
             {questions.map((q, i) => (
               <div key={q.id} className="question-item">
                 <span className="q-text">{i + 1}. {q.question}</span>
-                <span className="q-answer">答案: {q.answer}</span>
+                <span className="q-answer">{q.qtype === 'multiple' ? '多选' : '单选'} · 答案: {q.answer}</span>
                 <button className="delete-btn" onClick={() => handleDelete(q.id)}>删除</button>
               </div>
             ))}

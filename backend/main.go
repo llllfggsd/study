@@ -51,10 +51,13 @@ func main() {
 		auth.POST("/categories/:id/practice/complete", handlers.CompletePractice)
 		auth.POST("/questions/:id/answer", handlers.SubmitAnswer)
 
+		auth.POST("/categories/:id/exam/start", handlers.StartExam)
+		auth.POST("/categories/:id/exam/submit", handlers.SubmitExam)
+
 		auth.GET("/categories/:id/wrong-questions", handlers.GetWrongQuestions)
 		auth.POST("/questions/:id/remove-wrong", handlers.RemoveWrongQuestion)
 		auth.DELETE("/categories/:id/wrong-records", handlers.ClearWrongRecords)
 	}
 
-	r.Run(":8080")
+	r.Run(":40008")
 }

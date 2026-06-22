@@ -68,12 +68,17 @@ function CategoryDetail() {
         </div>
       </div>
 
+      <p style={{ marginBottom: 16, fontSize: 13, color: '#999' }}>
+        单选 {category.single_count} 题 · 多选 {category.multiple_count} 题
+      </p>
+
       <div className="action-grid">
         {category.is_owner && (
           <Link to={`/categories/${id}/import`} className="action-card">导入题目</Link>
         )}
         <Link to={`/categories/${id}/practice?mode=order`} className="action-card">顺序练习</Link>
         <Link to={`/categories/${id}/practice?mode=random`} className="action-card">随机练习</Link>
+        <Link to={`/categories/${id}/exam`} className="action-card">考试</Link>
         <Link to={`/categories/${id}/wrong`} className="action-card">错题集</Link>
         {category.is_owner && (
           <Link to={`/categories/${id}/questions`} className="action-card">题目管理</Link>

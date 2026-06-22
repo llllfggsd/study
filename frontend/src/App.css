@@ -392,6 +392,26 @@ body {
   color: #222;
 }
 
+.q-type-tag {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.q-type-tag.single {
+  background: #e8f0fe;
+  color: #1a73e8;
+}
+
+.q-type-tag.multi {
+  background: #fef3e0;
+  color: #e8710a;
+}
+
 .options-list {
   list-style: none;
   display: flex;

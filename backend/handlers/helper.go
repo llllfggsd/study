@@ -3,9 +3,26 @@ package handlers
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 	"study-quiz/database"
 	"study-quiz/models"
 )
+
+func NormalizeAnswer(raw string) string {
+	var seen [26]bool
+	for _, ch := range strings.ToUpper(raw) {
+		if ch >= 'A' && ch <= 'Z' {
+			seen[ch-'A'] = true
+		}
+	}
+	var b strings.Builder
+	for i := 0; i < 26; i++ {
+		if seen[i] {
+			b.WriteByte(byte('A' + i))
+		}
+	}
+	return b.String()
+}
 
 func CheckCategoryAccess(userID uint, categoryID string) (*models.Category, uint, bool, error) {
 	var category models.Category
@@ -25,6 +42,14 @@ func LoadCategoryStats(category *models.Category, userID uint, ownerID uint) {
 	database.DB.Model(&models.Question{}).
 		Where("category_id = ? AND user_id = ?", category.ID, ownerID).
 		Count(&category.QuestionCount)
+
+	database.DB.Model(&models.Question{}).
+		Where("category_id = ? AND user_id = ? AND qtype = ?", category.ID, ownerID, "single").
+		Count(&category.SingleCount)
+
+	database.DB.Model(&models.Question{}).
+		Where("category_id = ? AND user_id = ? AND qtype = ?", category.ID, ownerID, "multiple").
+		Count(&category.MultipleCount)
 
 	database.DB.Model(&models.QuestionRecord{}).
 		Joins("JOIN questions ON questions.id = question_records.question_id").

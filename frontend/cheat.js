@@ -1,53 +1,65 @@
-// 作弊脚本 v4
-// 任意页面运行，等待进入练习后自动秒答
+// 考试防作弊测试脚本 v5
+// 用途：自动开始考试 -> 极速作答 -> 交卷，验证「答题时间异常」提示是否正常触发
+// 任意页面运行；会自动等待进入考试页
 
 ;(async () => {
-  const _st = window.setTimeout
-  const wait = ms => new Promise(r => _st(r, ms))
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms))
+  const byText = (txt) =>
+    [...document.querySelectorAll('.practice-actions .btn')].find((b) => b.textContent.includes(txt))
 
-  console.log('作弊脚本已就绪，等待进入练习页面...')
-
-  // 轮询等待进入练习页
-  while (!location.pathname.match(/\/categories\/\d+\/practice/)) {
+  console.log('[考试测试] 已就绪，等待进入考试页面 /categories/:id/exam ...')
+  while (!location.pathname.match(/\/categories\/\d+\/exam/)) {
     await wait(300)
   }
+  console.log('[考试测试] 已进入考试页面，开始自动作答...')
 
-  console.log('检测到练习页面，准备中...')
-  await wait(1000)
+  let verdict = null
+  for (let i = 0; i < 2000; i++) {
+    await wait(50)
 
-  // 处理 "继续/新练习" 弹窗
-  const modalBtns = document.querySelectorAll('.modal .btn')
-  if (modalBtns.length > 1) {
-    console.log('点击新练习...')
-    modalBtns[modalBtns.length - 1].click()
-    await wait(800)
-  }
-
-  // 劫持 setTimeout，跳过 1 秒等待
-  window.setTimeout = (fn, ms, ...a) => _st(fn, ms === 1000 ? 0 : ms, ...a)
-  console.log('开始秒答...')
-
-  while (true) {
-    await wait(100)
-
-    const modal = document.querySelector('.modal')
-    if (modal && modal.querySelector('.btn-danger')) {
-      console.log('被抓了！')
+    // 1) 被抓：作弊提示弹出 -> 防作弊正常
+    if (document.querySelector('.modal .btn-danger')) {
+      verdict = 'caught'
       break
     }
-
+    // 2) 出分页：未被拦截 -> 提示未触发
     if (document.querySelector('.result-page')) {
-      console.log('居然没被抓？')
+      verdict = 'passed'
       break
     }
 
-    const btn = document.querySelector('.practice-actions .btn')
-    if (btn) { btn.click(); continue }
+    // 3) 配置页：点击「开始考试」
+    const start = byText('开始考试')
+    if (start && !document.querySelector('.option-item')) {
+      start.click()
+      continue
+    }
 
-    const option = document.querySelector('.option-item:not(.disabled)')
-    if (option) { option.click() }
+    // 4) 作答页：先确保本题已选，再翻页/交卷
+    const hasOption = document.querySelector('.option-item')
+    const selected = document.querySelector('.option-item.selected')
+    if (hasOption && !selected) {
+      hasOption.click()
+      continue
+    }
+
+    const submit = byText('交卷')
+    if (submit) {
+      submit.click()
+      continue
+    }
+    const next = byText('下一题')
+    if (next) {
+      next.click()
+      continue
+    }
   }
 
-  window.setTimeout = _st
-  console.log('脚本结束')
+  if (verdict === 'caught') {
+    console.log('%c[考试测试] ✅ 被拦截，防作弊提示正常触发', 'color:#34a853;font-weight:bold')
+  } else if (verdict === 'passed') {
+    console.log('%c[考试测试] ❌ 未被拦截，提示未触发（请检查时间校验）', 'color:#ea4335;font-weight:bold')
+  } else {
+    console.log('%c[考试测试] ⚠️ 超时退出，未得到结果', 'color:#fbbc04;font-weight:bold')
+  }
 })()

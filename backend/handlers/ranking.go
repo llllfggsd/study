@@ -46,7 +46,7 @@ func GetRanking(c *gin.Context) {
 	database.DB.Where("id IN ?", userIDs).Find(&users)
 
 	var results []models.PracticeResult
-	database.DB.Where("category_id = ? AND user_id IN ?", category.ID, userIDs).Find(&results)
+	database.DB.Where("category_id = ? AND user_id IN ? AND mode = ?", category.ID, userIDs, "exam").Find(&results)
 
 	userResults := map[uint][]models.PracticeResult{}
 	for _, r := range results {

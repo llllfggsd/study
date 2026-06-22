@@ -1,0 +1,35 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        # Go 编译镜像（可用 .env 覆盖 GO_IMAGE）
+        GO_IMAGE: ${GO_IMAGE:-swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/library/golang:alpine-linuxarm64}
+        RUNTIME_IMAGE: ${NODE_IMAGE:-swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:24.14.0-alpine3.22-linuxarm64}
+    container_name: study-quiz-backend
+    restart: unless-stopped
+    volumes:
+      - backend-data:/app/data
+    ports:
+      - "40008:40008"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:-swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:24.14.0-alpine3.22-linuxarm64}
+    container_name: study-quiz-frontend
+    restart: unless-stopped
+    environment:
+      # 容器内 vite preview 把 /api 代理到后端服务
+      VITE_API_TARGET: http://backend:40008
+    ports:
+      # 宿主端口:容器端口
+      - "40007:40007"
+    depends_on:
+      - backend
+
+volumes:
+  backend-data:

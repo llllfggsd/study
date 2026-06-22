@@ -175,15 +175,18 @@ func SubmitAnswer(c *gin.Context) {
 		return
 	}
 
+	userAnswer := NormalizeAnswer(req.Answer)
+	correctAnswer := NormalizeAnswer(question.Answer)
+
 	isCorrect := 0
-	if req.Answer == question.Answer {
+	if userAnswer != "" && userAnswer == correctAnswer {
 		isCorrect = 1
 	}
 
 	record := models.QuestionRecord{
 		UserID:     userID,
 		QuestionID: question.ID,
-		UserAnswer: req.Answer,
+		UserAnswer: userAnswer,
 		IsCorrect:  isCorrect,
 		AnsweredAt: time.Now(),
 	}
@@ -191,8 +194,8 @@ func SubmitAnswer(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"is_correct":     isCorrect == 1,
-		"user_answer":    req.Answer,
-		"correct_answer": question.Answer,
+		"user_answer":    userAnswer,
+		"correct_answer": correctAnswer,
 		"explanation":    question.Explanation,
 	})
 }

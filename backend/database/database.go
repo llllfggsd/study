@@ -1,9 +1,11 @@
 package database
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"os"
+	"strings"
 	"study-quiz/models"
 	"time"
 
@@ -40,6 +42,37 @@ func Init() {
 
 	seedAdmin()
 	fixShareCodes()
+	migrateQuestions()
+}
+
+func migrateQuestions() {
+	var questions []models.Question
+	DB.Where("options IS NULL OR options = '' OR options = 'null' OR options = '[]'").Find(&questions)
+	for i := range questions {
+		q := &questions[i]
+		opts := []string{}
+		for _, o := range []string{q.OptionA, q.OptionB, q.OptionC, q.OptionD} {
+			if strings.TrimSpace(o) != "" {
+				opts = append(opts, o)
+			}
+		}
+		if len(opts) == 0 {
+			continue
+		}
+		optsJSON, _ := json.Marshal(opts)
+		qtype := "single"
+		if len(strings.ToUpper(strings.TrimSpace(q.Answer))) > 1 {
+			qtype = "multiple"
+		}
+		DB.Model(q).Updates(map[string]interface{}{
+			"qtype":   qtype,
+			"options": string(optsJSON),
+			"answer":  strings.ToUpper(strings.TrimSpace(q.Answer)),
+		})
+	}
+	if len(questions) > 0 {
+		fmt.Printf("已迁移 %d 道历史题目\n", len(questions))
+	}
 }
 
 func seedAdmin() {

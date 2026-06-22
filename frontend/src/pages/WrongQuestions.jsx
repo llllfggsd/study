@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../api'
+import { buildOptions, isMulti } from '../utils/quiz'
 
 function WrongQuestions() {
   const { id } = useParams()
@@ -9,7 +10,7 @@ function WrongQuestions() {
   const [loading, setLoading] = useState(true)
   const [practicing, setPracticing] = useState(false)
   const [current, setCurrent] = useState(0)
-  const [selected, setSelected] = useState(null)
+  const [picks, setPicks] = useState([])
   const [submitted, setSubmitted] = useState(false)
   const [result, setResult] = useState(null)
 
@@ -38,31 +39,32 @@ function WrongQuestions() {
     }
   }
 
+  const resetQ = () => {
+    setPicks([])
+    setSubmitted(false)
+    setResult(null)
+  }
+
   const goNext = useCallback(() => {
     if (current < questions.length - 1) {
       setCurrent((c) => c + 1)
-      setSelected(null)
-      setSubmitted(false)
-      setResult(null)
+      resetQ()
     } else {
       setPracticing(false)
       setCurrent(0)
-      setSelected(null)
-      setSubmitted(false)
-      setResult(null)
+      resetQ()
       fetchWrong()
     }
   }, [current, questions.length])
 
-  const handleSelect = async (option) => {
+  const submitAnswer = async (answerStr, multi) => {
     if (submitted) return
-    setSelected(option)
     try {
       const q = questions[current]
-      const res = await api.post(`/questions/${q.id}/answer`, { answer: option })
+      const res = await api.post(`/questions/${q.id}/answer`, { answer: answerStr })
       setResult(res.data)
       setSubmitted(true)
-      if (res.data.is_correct) {
+      if (res.data.is_correct && !multi) {
         setTimeout(goNext, 1000)
       }
     } catch (err) {
@@ -70,28 +72,37 @@ function WrongQuestions() {
     }
   }
 
+  const handleClick = (key, multi) => {
+    if (submitted) return
+    if (multi) {
+      setPicks((p) => (p.includes(key) ? p.filter((k) => k !== key) : [...p, key]))
+    } else {
+      setPicks([key])
+      submitAnswer(key, false)
+    }
+  }
+
   if (loading) return <div className="loading">加载中...</div>
 
   if (practicing && questions.length > 0) {
     const q = questions[current]
-    const options = [
-      { key: 'A', text: q.option_a },
-      { key: 'B', text: q.option_b },
-      { key: 'C', text: q.option_c },
-      { key: 'D', text: q.option_d },
-    ]
+    const multi = isMulti(q)
+    const options = buildOptions(q)
+    const correctSet = new Set(result ? result.correct_answer.split('') : [])
 
     const getOptionClass = (key) => {
       let cls = 'option-item'
       if (submitted) {
         cls += ' disabled'
-        if (key === result.correct_answer) cls += ' correct'
-        else if (key === selected && !result.is_correct) cls += ' wrong'
-      } else if (key === selected) {
+        if (correctSet.has(key)) cls += ' correct'
+        else if (picks.includes(key)) cls += ' wrong'
+      } else if (picks.includes(key)) {
         cls += ' selected'
       }
       return cls
     }
+
+    const showFeedback = submitted && (multi || !result.is_correct)
 
     return (
       <div className="practice-page">
@@ -102,18 +113,31 @@ function WrongQuestions() {
         </div>
         <div className="practice-progress">第 {current + 1} / {questions.length} 题</div>
         <div className="question-card">
-          <div className="question-text">{q.question}</div>
+          <div className="question-text">
+            <span className={`q-type-tag ${multi ? 'multi' : 'single'}`}>{multi ? '多选' : '单选'}</span>
+            {q.question}
+          </div>
           <ul className="options-list">
             {options.map(({ key, text }) => (
-              <li key={key} className={getOptionClass(key)} onClick={() => handleSelect(key)}>
+              <li key={key} className={getOptionClass(key)} onClick={() => handleClick(key, multi)}>
                 {key}. {text}
               </li>
             ))}
           </ul>
-          {submitted && result && !result.is_correct && (
+
+          {!submitted && multi && (
+            <div className="practice-actions">
+              <button className="btn btn-primary" disabled={picks.length === 0}
+                onClick={() => submitAnswer([...picks].sort().join(''), true)}>
+                提交答案
+              </button>
+            </div>
+          )}
+
+          {showFeedback && (
             <>
-              <div className="result-box wrong">
-                <p>你的答案: {result.user_answer}，正确答案: {result.correct_answer}</p>
+              <div className={`result-box ${result.is_correct ? 'correct' : 'wrong'}`}>
+                <p>你的答案: {result.user_answer || '（未选）'}，正确答案: {result.correct_answer}</p>
                 {result.explanation && <div className="explanation">解析: {result.explanation}</div>}
               </div>
               <div className="practice-actions">

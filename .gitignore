@@ -9,3 +9,4 @@ node_modules
 .vscode
 coverage
 *.bak
+backend/data

@@ -62,7 +62,7 @@ function ImportPage() {
 
       {result && (
         <div className="result-box correct">
-          <p>导入完成！成功导入 {result.imported} 题，共 {result.total} 题。</p>
+          <p>导入完成！成功导入 {result.imported} 题（单选 {result.single_count} 题，多选 {result.multiple_count} 题），共 {result.total} 题。</p>
           {result.errors > 0 && <p>跳过 {result.errors} 条格式不正确的数据。</p>}
         </div>
       )}
@@ -92,10 +92,17 @@ function ImportPage() {
               <td>int a=10</td><td>let a=10</td><td>a=10</td><td>var a=10</td>
               <td>C</td><td>Python变量不需要声明类型</td>
             </tr>
+            <tr>
+              <td>以下属于Python内置类型的有？</td>
+              <td>list</td><td>dict</td><td>struct</td><td>tuple</td>
+              <td>ABD</td><td>struct 不是 Python 内置类型</td>
+            </tr>
           </tbody>
         </table>
-        <p style={{ marginTop: 12, fontSize: 13, color: '#888' }}>
-          第一行必须是标题行。问题、A、B、C、D、答案为必填，解析可为空。答案只能是 A/B/C/D。
+        <p style={{ marginTop: 12, fontSize: 13, color: '#888', lineHeight: 1.7 }}>
+          第一行必须是标题行。<b>问题</b> 与 <b>答案</b> 列必填，<b>解析</b> 可为空。<br />
+          表头为单个大写字母（A、B、C、D… 可超过 4 个）的列即为选项列，按字母顺序排列。<br />
+          答案列填写正确选项的字母：<b>单个字母</b>（如 C）为单选题，<b>多个字母</b>（如 ABD，可用逗号/顿号分隔）为多选题，系统自动区分。
         </p>
       </div>
     </div>

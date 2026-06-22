@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 	"study-quiz/database"
 	"study-quiz/models"
@@ -11,6 +12,13 @@ import (
 	"github.com/xuri/excelize/v2"
 	"gorm.io/gorm"
 )
+
+func cell(row []string, idx int) string {
+	if idx < 0 || idx >= len(row) {
+		return ""
+	}
+	return strings.TrimSpace(row[idx])
+}
 
 func ImportQuestions(c *gin.Context) {
 	userID := c.GetUint("user_id")
@@ -54,51 +62,120 @@ func ImportQuestions(c *gin.Context) {
 		return
 	}
 
+	header := rows[0]
+	questionCol, answerCol, explanationCol := -1, -1, -1
+	type optCol struct {
+		letter byte
+		idx    int
+	}
+	var optCols []optCol
+
+	for i, h := range header {
+		h = strings.TrimSpace(h)
+		switch h {
+		case "问题", "题目", "question", "Question":
+			questionCol = i
+		case "答案", "正确答案", "answer", "Answer":
+			answerCol = i
+		case "解析", "分析", "explanation", "Explanation":
+			explanationCol = i
+		default:
+			if len(h) == 1 && h[0] >= 'A' && h[0] <= 'Z' {
+				optCols = append(optCols, optCol{letter: h[0], idx: i})
+			}
+		}
+	}
+
+	sort.Slice(optCols, func(a, b int) bool { return optCols[a].letter < optCols[b].letter })
+
+	if questionCol == -1 || answerCol == -1 || len(optCols) < 2 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "表头需包含 [问题]、若干大写字母选项列(A、B、C…) 和 [答案]"})
+		return
+	}
+
 	imported := 0
 	skipped := 0
+	singleCount := 0
+	multipleCount := 0
 	var batch []models.Question
 
-	for i, row := range rows {
-		if i == 0 {
-			continue
-		}
-		if len(row) < 6 {
+	for i := 1; i < len(rows); i++ {
+		row := rows[i]
+
+		question := cell(row, questionCol)
+		if question == "" {
 			skipped++
 			continue
 		}
 
-		question := strings.TrimSpace(row[0])
-		optionA := strings.TrimSpace(row[1])
-		optionB := strings.TrimSpace(row[2])
-		optionC := strings.TrimSpace(row[3])
-		optionD := strings.TrimSpace(row[4])
-		answer := strings.TrimSpace(strings.ToUpper(row[5]))
-		explanation := ""
-		if len(row) > 6 {
-			explanation = strings.TrimSpace(row[6])
+		var optVals []string
+		for _, oc := range optCols {
+			optVals = append(optVals, cell(row, oc.idx))
 		}
-
-		if question == "" || optionA == "" || optionB == "" || optionC == "" || optionD == "" || answer == "" {
+		lastNonEmpty := -1
+		for j, v := range optVals {
+			if v != "" {
+				lastNonEmpty = j
+			}
+		}
+		if lastNonEmpty < 1 {
+			skipped++
+			continue
+		}
+		options := optVals[:lastNonEmpty+1]
+		gap := false
+		for _, v := range options {
+			if v == "" {
+				gap = true
+				break
+			}
+		}
+		if gap {
 			skipped++
 			continue
 		}
 
-		if answer != "A" && answer != "B" && answer != "C" && answer != "D" {
+		answer := NormalizeAnswer(cell(row, answerCol))
+		if answer == "" {
+			skipped++
+			continue
+		}
+		valid := true
+		for _, ch := range answer {
+			if int(ch-'A') >= len(options) {
+				valid = false
+				break
+			}
+		}
+		if !valid {
 			skipped++
 			continue
 		}
 
-		batch = append(batch, models.Question{
+		qtype := "single"
+		if len(answer) > 1 {
+			qtype = "multiple"
+			multipleCount++
+		} else {
+			singleCount++
+		}
+
+		q := models.Question{
 			UserID:      userID,
 			CategoryID:  category.ID,
 			Question:    question,
-			OptionA:     optionA,
-			OptionB:     optionB,
-			OptionC:     optionC,
-			OptionD:     optionD,
+			QType:       qtype,
+			Options:     options,
 			Answer:      answer,
-			Explanation: explanation,
-		})
+			Explanation: cell(row, explanationCol),
+		}
+		legacy := []string{"", "", "", ""}
+		for j := 0; j < len(options) && j < 4; j++ {
+			legacy[j] = options[j]
+		}
+		q.OptionA, q.OptionB, q.OptionC, q.OptionD = legacy[0], legacy[1], legacy[2], legacy[3]
+
+		batch = append(batch, q)
 	}
 
 	if len(batch) > 0 {
@@ -118,10 +195,12 @@ func ImportQuestions(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":  "导入完成",
-		"imported": imported,
-		"total":    len(rows) - 1,
-		"errors":   skipped,
+		"message":        "导入完成",
+		"imported":       imported,
+		"single_count":   singleCount,
+		"multiple_count": multipleCount,
+		"total":          len(rows) - 1,
+		"errors":         skipped,
 	})
 }
 

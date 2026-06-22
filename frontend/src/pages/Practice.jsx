@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../api'
+import { buildOptions, isMulti } from '../utils/quiz'
 
 function getEvaluation(score) {
   if (score === 100) return { text: '满分！太棒了！', color: '#34a853' }
@@ -28,7 +29,7 @@ function Practice() {
   const [progressInfo, setProgressInfo] = useState(null)
   const [questions, setQuestions] = useState([])
   const [current, setCurrent] = useState(0)
-  const [selected, setSelected] = useState(null)
+  const [picks, setPicks] = useState([])
   const [submitted, setSubmitted] = useState(false)
   const [result, setResult] = useState(null)
   const [practiceResult, setPracticeResult] = useState(null)
@@ -47,10 +48,10 @@ function Practice() {
         } else {
           await doStart(true)
         }
-    } catch (err) {
-      lockRef.current = false
-      console.error(err)
-    }
+      } catch (err) {
+        lockRef.current = false
+        console.error(err)
+      }
     }
     checkStatus()
   }, [id, mode])
@@ -62,6 +63,7 @@ function Practice() {
       const idx = res.data.current_index || 0
       setQuestions(qs)
       setCurrent(idx)
+      setPicks([])
       correctRef.current = 0
       startRef.current = Date.now()
       lockRef.current = false
@@ -101,7 +103,7 @@ function Practice() {
     if (current < questions.length - 1) {
       const next = current + 1
       setCurrent(next)
-      setSelected(null)
+      setPicks([])
       setSubmitted(false)
       setResult(null)
       lockRef.current = false
@@ -109,29 +111,35 @@ function Practice() {
     }
   }, [current, questions.length, id, mode])
 
-  const handleSelect = async (option) => {
-    if (submitted || lockRef.current) return
+  const submitAnswer = async (answerStr, multi) => {
+    if (lockRef.current) return
     lockRef.current = true
-    setSelected(option)
     try {
       const q = questions[current]
-      const res = await api.post(`/questions/${q.id}/answer`, { answer: option })
+      const res = await api.post(`/questions/${q.id}/answer`, { answer: answerStr })
       setResult(res.data)
       setSubmitted(true)
-
       const isLast = current >= questions.length - 1
       if (res.data.is_correct) {
         correctRef.current += 1
-        if (!isLast) {
-          setTimeout(goNext, 1000)
-        } else {
-          setTimeout(() => {
-            finishPractice()
-          }, 1000)
+        if (!multi) {
+          if (!isLast) setTimeout(goNext, 1000)
+          else setTimeout(finishPractice, 1000)
         }
       }
     } catch (err) {
       console.error(err)
+      lockRef.current = false
+    }
+  }
+
+  const handleClick = (key, multi) => {
+    if (submitted || lockRef.current) return
+    if (multi) {
+      setPicks((p) => (p.includes(key) ? p.filter((k) => k !== key) : [...p, key]))
+    } else {
+      setPicks([key])
+      submitAnswer(key, false)
     }
   }
 
@@ -212,26 +220,24 @@ function Practice() {
   )
 
   const q = questions[current]
-  const options = [
-    { key: 'A', text: q.option_a },
-    { key: 'B', text: q.option_b },
-    { key: 'C', text: q.option_c },
-    { key: 'D', text: q.option_d },
-  ]
+  const multi = isMulti(q)
+  const options = buildOptions(q)
+  const correctSet = new Set(result ? result.correct_answer.split('') : [])
 
   const getOptionClass = (key) => {
     let cls = 'option-item'
     if (submitted) {
       cls += ' disabled'
-      if (key === result.correct_answer) cls += ' correct'
-      else if (key === selected && !result.is_correct) cls += ' wrong'
-    } else if (key === selected) {
+      if (correctSet.has(key)) cls += ' correct'
+      else if (picks.includes(key)) cls += ' wrong'
+    } else if (picks.includes(key)) {
       cls += ' selected'
     }
     return cls
   }
 
   const isLast = current >= questions.length - 1
+  const showFeedback = submitted && (multi || !result.is_correct)
 
   return (
     <div className="practice-page">
@@ -246,19 +252,31 @@ function Practice() {
       </div>
 
       <div className="question-card">
-        <div className="question-text">{q.question}</div>
+        <div className="question-text">
+          <span className={`q-type-tag ${multi ? 'multi' : 'single'}`}>{multi ? '多选' : '单选'}</span>
+          {q.question}
+        </div>
         <ul className="options-list">
           {options.map(({ key, text }) => (
-            <li key={key} className={getOptionClass(key)} onClick={() => handleSelect(key)}>
+            <li key={key} className={getOptionClass(key)} onClick={() => handleClick(key, multi)}>
               {key}. {text}
             </li>
           ))}
         </ul>
 
-        {submitted && result && !result.is_correct && (
+        {!submitted && multi && (
+          <div className="practice-actions">
+            <button className="btn btn-primary" disabled={picks.length === 0}
+              onClick={() => submitAnswer([...picks].sort().join(''), true)}>
+              提交答案
+            </button>
+          </div>
+        )}
+
+        {showFeedback && (
           <>
-            <div className="result-box wrong">
-              <p>你的答案: {result.user_answer}，正确答案: {result.correct_answer}</p>
+            <div className={`result-box ${result.is_correct ? 'correct' : 'wrong'}`}>
+              <p>你的答案: {result.user_answer || '（未选）'}，正确答案: {result.correct_answer}</p>
               {result.explanation && (
                 <div className="explanation">解析: {result.explanation}</div>
               )}
