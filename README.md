@@ -55,13 +55,13 @@ study/
 cd backend
 go run .
 
-# 前端（监听 :40007，/api 代理到 localhost:40008）
+# 前端（监听 0.0.0.0:40007，/api 代理到 0.0.0.0:40008）
 cd frontend
 npm install
 npm run dev
 ```
 
-浏览器访问 http://localhost:40007 。
+浏览器访问 http://0.0.0.0:40007 （或用本机 IP，如 http://<宿主IP>:40007）。
 
 ## Docker 部署
 
